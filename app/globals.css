@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================
+   Base Dark Theme
+   ============================================= */
+:root {
+  /* Background hierarchy */
+  --bg-base: #09090B;
+  --bg-surface: #18181B;
+  --bg-elevated: #27272A;
+  --bg-subtle: #3F3F46;
+
+  /* Text hierarchy */
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #71717A;
+
+  /* Border hierarchy */
+  --border-primary: #27272A;
+  --border-subtle: #3F3F46;
+  --border-glass: rgba(255, 255, 255, 0.08);
+
+  /* Brand colors */
+  --brand: #F5A623;
+  --brand-light: #F7C873;
+  --brand-dark: #D4891A;
+  --brand-glow: rgba(245, 166, 35, 0.25);
+
+  /* Accent colors */
+  --accent: #6366F1;
+  --accent-light: #818CF8;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+
+  /* Functional colors */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --info: #3B82F6;
+
+  /* Animation durations */
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-glacial: 800ms;
+
+  /* Easing curves */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing unit (4px grid) */
+  --space-unit: 4px;
+
+  /* Hero gradient */
+  --hero-bg: radial-gradient(
+    ellipse 80% 60% at 50% -10%,
+    rgba(245, 166, 35, 0.12) 0%,
+    rgba(99, 102, 241, 0.06) 40%,
+    transparent 70%
+  );
+
+  /* Score gradient */
+  --score-gradient: linear-gradient(135deg, #F5A623 0%, #F7C873 50%, #E8961A 100%);
+
+  /* Status flow colors */
+  --status-待投递: #71717A;
+  --status-已投递: #3B82F6;
+  --status-面试中: #F5A623;
+  --status-已拿Offer: #22C55E;
+}
+
+/* =============================================
+   Global Styles
+   ============================================= */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont,
+    'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* =============================================
+   Glass Effect Utilities
+   ============================================= */
+@layer components {
+  .glass-card {
+    @apply relative rounded-2xl border border-white/[0.08]
+           bg-zinc-900/70 backdrop-blur-xl
+           shadow-[0_1px_3px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.03)_inset]
+           transition-all duration-300 ease-out;
+  }
+
+  .glass-card-hover {
+    @apply hover:border-white/[0.14]
+           hover:shadow-[0_4px_20px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.04)_inset]
+           hover:translate-y-[-2px];
+  }
+
+  .glass-card-glow {
+    @apply before:absolute before:inset-x-0 before:top-0 before:h-px
+           before:bg-gradient-to-r before:from-transparent before:via-brand/20 before:to-transparent;
+  }
+
+  /* Brand gradient text */
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent
+           bg-gradient-to-r from-brand via-brand-light to-brand-dark;
+  }
+
+  /* Score gradient text */
+  .text-gradient-score {
+    background: var(--score-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* =============================================
+   Scrollbar Styling (Dark Theme)
+   ============================================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-subtle);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* =============================================
+   Selection Color
+   ============================================= */
+::selection {
+  background: rgba(245, 166, 35, 0.3);
+  color: var(--text-primary);
+}
+
+/* =============================================
+   Focus Ring
+   ============================================= */
+*:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* =============================================
+   Animate Plugin Fixes
+   ============================================= */
+.animate-in {
+  animation-fill-mode: both;
+}
