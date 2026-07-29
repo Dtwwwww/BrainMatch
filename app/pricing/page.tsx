@@ -1,4 +1,6 @@
 'use client';
+export const runtime = 'edge';
+
 
 import { useState } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
