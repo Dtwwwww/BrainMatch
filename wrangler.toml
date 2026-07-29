@@ -1,0 +1,5 @@
+name = "brainmatch"
+compatibility_date = "2024-12-30"
+
+[env.production]
+# 所有环境变量在 Cloudflare Dashboard 中设置，不写在文件里
