@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 
 import { getAuthenticatedUser, createSupabaseServerClient } from '@/lib/supabase/server';
 import { handleAppError } from '@/lib/api/error-handler';
