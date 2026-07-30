@@ -12,12 +12,12 @@ export const AGENT_CONFIG: Record<
   },
   resume_parser: {
     maxTokens: 2000,
-    temperature: 0.1,
+    temperature: 0.2,
     timeout: 30000,
   },
   match_analyzer: {
     maxTokens: 8000,
-    temperature: 0.2,
+    temperature: 0.3,
     timeout: 120000,
   },
   interview_generator: {

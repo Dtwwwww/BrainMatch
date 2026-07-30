@@ -57,16 +57,24 @@ export async function runAnalysisPipeline(
     let cacheHit = false;
 
     const cached = await getCachedJobInsight(jdText);
-    if (cached) {
+    // 缓存版本标记 v3：旧版 Prompt（v1/v2）的缓存可能含有强制找茬偏差
+    // 添加 version 字段确保旧缓存不毒化新分析
+    if (cached && cached._cache_version === 3) {
       jobInsight = cached;
       cacheHit = true;
-      console.log(`[${analysisId}] Cache hit for JD`);
+      console.log(`[${analysisId}] Cache hit for JD (v3)`);
+    } else if (cached) {
+      // 旧版本缓存，忽略重新解析
+      console.log(`[${analysisId}] Cache ignored — outdated version (got ${cached._cache_version || 'v1'}, need v3)`);
+      cacheHit = false;
     } else {
       jobInsight = await callAgent<JobInsight>(
         JOB_PARSER_SYSTEM_PROMPT,
         jdText,
         'job_parser'
       );
+      // 标记缓存版本
+      (jobInsight as any)._cache_version = 3;
       // 异步写缓存（不阻塞流水线）
       cacheJobInsight(jdText, jobInsight).catch((e) =>
         console.warn('Cache write failed:', e)
@@ -90,7 +98,7 @@ export async function runAnalysisPipeline(
     // ==========================================
     const resumeInsight = await callAgent<ResumeInsight>(
       RESUME_PARSER_SYSTEM_PROMPT,
-      resumeText,
+      `【当前日期：${new Date().toLocaleDateString('zh-CN')}——基于此日期判断是否在校、空窗期长度、毕业时间等时间相关信号】\n\n${resumeText}`,
       'resume_parser'
     );
 
@@ -107,7 +115,15 @@ export async function runAnalysisPipeline(
     // ==========================================
     // Phase 3: 匹配分析
     // ==========================================
-    const matchPrompt = `job_insight:\n${JSON.stringify(jobInsight, null, 2)}\n\nresume_insight:\n${JSON.stringify(resumeInsight, null, 2)}`;
+    const matchPrompt = `【当前日期：${new Date().toLocaleDateString('zh-CN')}——请基于当前日期评估毕业时间、工作年限、空窗期等时间维度】
+【JD目标受众：${(jobInsight as any).target_level || '未指定'}——评分基准应为该级别的同级候选人】
+【候选人职业阶段：${(resumeInsight as any).career_stage || '未指定'}——注意与JD目标受众是否匹配】
+
+job_insight:
+${JSON.stringify(jobInsight, null, 2)}
+
+resume_insight:
+${JSON.stringify(resumeInsight, null, 2)}`;
 
     const reportJSON = await callAgent<ReportJSON>(
       MATCH_ANALYZER_SYSTEM_PROMPT,
