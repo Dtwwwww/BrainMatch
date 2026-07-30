@@ -31,7 +31,8 @@ export async function GET(req: Request) {
       .from('profiles')
       .select(
         `id, email, phone, full_name, avatar_url, created_at,
-         user_credits ( remaining_analyses, total_purchased )`,
+         user_credits ( remaining_analyses, total_purchased ),
+         user_config ( is_flagged )`,
         { count: 'exact' }
       );
 
@@ -75,6 +76,7 @@ export async function GET(req: Request) {
     const users = (profiles || []).map((p: any) => {
       const stats = analysisStats[p.id] || { analysis_count: 0, offer_count: 0 };
       const credits = p.user_credits?.[0] || { remaining_analyses: 0, total_purchased: 0 };
+      const config = p.user_config?.[0] || { is_flagged: false };
       return {
         id: p.id,
         email: p.email,
@@ -86,6 +88,7 @@ export async function GET(req: Request) {
         total_purchased: credits.total_purchased ?? 0,
         analysis_count: stats.analysis_count,
         offer_count: stats.offer_count,
+        is_flagged: config.is_flagged ?? false,
       };
     });
 

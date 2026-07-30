@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { handleAppError } from '@/lib/api/error-handler';
+import { logAdminAction } from '@/lib/admin/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,20 @@ export async function PATCH(req: Request) {
         },
       });
     }
+
+    // 记录操作日志
+    await logAdminAction({
+      action: diff >= 0 ? 'update_credits_add' : 'update_credits_deduct',
+      targetType: 'user',
+      targetId: userId,
+      details: {
+        old_remaining: oldRemaining,
+        new_remaining: remaining_analyses,
+        diff,
+        reason: reason || '管理员修改次数',
+      },
+      adminKey,
+    });
 
     return Response.json({
       success: true,

@@ -5,6 +5,9 @@ import GlassCard from '@/components/ui/GlassCard';
 import Modal from '@/components/ui/Modal';
 import Skeleton from '@/components/ui/Skeleton';
 import Pagination from '@/components/ui/Pagination';
+import OrdersView from '@/components/admin/OrdersView';
+import TransactionsView from '@/components/admin/TransactionsView';
+import LogsView from '@/components/admin/LogsView';
 
 interface UserItem {
   id: string;
@@ -17,6 +20,7 @@ interface UserItem {
   total_purchased: number;
   analysis_count: number;
   offer_count: number;
+  is_flagged: boolean;
 }
 
 interface DashboardStats {
@@ -118,6 +122,9 @@ export default function AdminPage() {
   const [editCredits, setEditCredits] = useState(0);
   const [editReason, setEditReason] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+
+  // 视图切换
+  const [view, setView] = useState<'users' | 'orders' | 'transactions' | 'logs'>('users');
 
   // 验证密钥
   const handleAuth = async () => {
@@ -404,43 +411,67 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* 搜索栏 */}
-        <GlassCard className="p-4 mb-6" hover={false}>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="搜索邮箱 / 手机号 / 姓名..."
-              className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800 border border-white/[0.08] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-brand/50 transition-colors text-sm"
-            />
+        {/* 视图切换 */}
+        <div className="flex gap-2 mb-6">
+          {[
+            { key: 'users', label: '👥 用户管理' },
+            { key: 'orders', label: '📦 订单管理' },
+            { key: 'transactions', label: '💰 流水管理' },
+            { key: 'logs', label: '📋 操作日志' },
+          ].map((v) => (
             <button
-              onClick={handleSearch}
-              className="px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-200 border border-white/[0.08] hover:bg-zinc-700 transition-all text-sm"
+              key={v.key}
+              onClick={() => setView(v.key as typeof view)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                view === v.key
+                  ? 'bg-zinc-800 text-zinc-100 border border-white/[0.14] shadow-sm'
+                  : 'bg-transparent text-zinc-500 border border-transparent hover:text-zinc-300'
+              }`}
             >
-              搜索
+              {v.label}
             </button>
-            <button
-              onClick={() => {
-                setSearch('');
-                setPage(1);
-                fetchUsers(1, limit, '');
-                fetchStats();
-              }}
-              className="px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-400 border border-white/[0.08] hover:bg-zinc-700 hover:text-zinc-300 transition-all text-sm"
-            >
-              刷新
-            </button>
-          </div>
-        </GlassCard>
+          ))}
+        </div>
 
-        {/* 消息提示 */}
-        {message && (
-          <div className="mb-4 text-sm text-zinc-400 bg-zinc-800/50 px-4 py-3 rounded-xl border border-white/[0.06]">
-            {message}
-          </div>
-        )}
+        {view === 'users' && (
+          <>
+            {/* 搜索栏 */}
+            <GlassCard className="p-4 mb-6" hover={false}>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="搜索邮箱 / 手机号 / 姓名..."
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-zinc-800 border border-white/[0.08] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-brand/50 transition-colors text-sm"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-200 border border-white/[0.08] hover:bg-zinc-700 transition-all text-sm"
+                >
+                  搜索
+                </button>
+                <button
+                  onClick={() => {
+                    setSearch('');
+                    setPage(1);
+                    fetchUsers(1, limit, '');
+                    fetchStats();
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-400 border border-white/[0.08] hover:bg-zinc-700 hover:text-zinc-300 transition-all text-sm"
+                >
+                  刷新
+                </button>
+              </div>
+            </GlassCard>
+
+            {/* 消息提示 */}
+            {message && (
+              <div className="mb-4 text-sm text-zinc-400 bg-zinc-800/50 px-4 py-3 rounded-xl border border-white/[0.06]">
+                {message}
+              </div>
+            )}
 
         {/* 用户表格 */}
         <GlassCard className="overflow-hidden" hover={false}>
@@ -493,8 +524,13 @@ export default function AdminPage() {
                             </div>
                           )}
                           <div>
-                            <p className="text-zinc-200 font-medium">
+                            <p className="text-zinc-200 font-medium flex items-center gap-1.5">
                               {user.full_name || '未命名用户'}
+                              {user.is_flagged && (
+                                <span className="px-1.5 py-0.5 rounded bg-red-950/50 text-red-400 text-[10px] border border-red-900/30">
+                                  已封禁
+                                </span>
+                              )}
                             </p>
                             <p className="text-xs text-zinc-600 font-mono">
                               {user.id.slice(0, 8)}...
@@ -564,6 +600,12 @@ export default function AdminPage() {
             />
           </div>
         </GlassCard>
+        </>
+      )}
+
+      {view === 'orders' && <OrdersView adminKey={adminKey} />}
+      {view === 'transactions' && <TransactionsView adminKey={adminKey} />}
+      {view === 'logs' && <LogsView adminKey={adminKey} />}
       </div>
 
       {/* 用户详情弹窗 */}
@@ -704,6 +746,97 @@ export default function AdminPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* 封禁/解封控制 */}
+                    <div className="p-4 rounded-xl bg-zinc-800/50 border border-white/[0.06]">
+                      <p className="text-xs text-zinc-500 mb-3">账号状态管理</p>
+                      {detailData.config?.is_flagged ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                            <span className="text-sm text-red-400">该用户已被封禁</span>
+                          </div>
+                          {detailData.config.flag_reason && (
+                            <p className="text-xs text-zinc-500">
+                              原因：{detailData.config.flag_reason}
+                            </p>
+                          )}
+                          <button
+                            onClick={async () => {
+                              if (!confirm('确定要解封该用户吗？')) return;
+                              try {
+                                const res = await fetch(`/api/admin/users/${selectedUser.id}/unban`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Admin-Key': adminKey,
+                                  },
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  setMessage(`✅ ${data.message}`);
+                                  fetchDetail(selectedUser.id);
+                                  fetchUsers(page, limit, search);
+                                } else {
+                                  setMessage(`❌ ${data.error || '操作失败'}`);
+                                }
+                              } catch {
+                                setMessage('❌ 操作失败');
+                              }
+                            }}
+                            className="px-5 py-2 rounded-xl bg-amber-600/20 text-amber-400 border border-amber-600/30 hover:bg-amber-600/30 transition-all text-sm font-medium"
+                          >
+                            解封用户
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="text-sm text-emerald-400">该用户状态正常</span>
+                          </div>
+                          <input
+                            type="text"
+                            id="ban-reason"
+                            placeholder="封禁原因（必填）"
+                            className="w-full px-4 py-2.5 rounded-xl bg-zinc-800 border border-white/[0.08] text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-red-500/50 transition-colors text-sm"
+                          />
+                          <button
+                            onClick={async () => {
+                              const reason = (document.getElementById('ban-reason') as HTMLInputElement)?.value;
+                              if (!reason.trim()) {
+                                setMessage('❌ 请输入封禁原因');
+                                return;
+                              }
+                              if (!confirm(`确定要封禁该用户吗？\n原因：${reason}`)) return;
+                              try {
+                                const res = await fetch(`/api/admin/users/${selectedUser.id}/ban`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Admin-Key': adminKey,
+                                  },
+                                  body: JSON.stringify({ reason }),
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                  setMessage(`✅ ${data.message}`);
+                                  fetchDetail(selectedUser.id);
+                                  fetchUsers(page, limit, search);
+                                } else {
+                                  setMessage(`❌ ${data.error || '操作失败'}`);
+                                }
+                              } catch {
+                                setMessage('❌ 操作失败');
+                              }
+                            }}
+                            className="px-5 py-2 rounded-xl bg-red-600/20 text-red-400 border border-red-600/30 hover:bg-red-600/30 transition-all text-sm font-medium"
+                          >
+                            封禁用户
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

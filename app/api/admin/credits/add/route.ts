@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { handleAppError } from '@/lib/api/error-handler';
+import { logAdminAction } from '@/lib/admin/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,19 @@ export async function POST(req: Request) {
       amount: credits,
       balance_after: newRemaining,
       meta: { reason: reason || '管理员手动添加', admin_action: true },
+    });
+
+    // 记录操作日志
+    await logAdminAction({
+      action: 'add_credits',
+      targetType: 'user',
+      targetId: userId,
+      details: {
+        added: credits,
+        new_remaining: newRemaining,
+        reason: reason || '管理员手动添加',
+      },
+      adminKey,
     });
 
     return Response.json({

@@ -18,6 +18,25 @@ export async function POST(req: Request) {
   try {
     const user = await getAuthenticatedUser();
 
+    // 检查用户是否被封禁
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: userConfig } = await supabase
+      .from('user_config')
+      .select('is_flagged, flag_reason')
+      .eq('user_id', user.id)
+      .single();
+
+    if (userConfig?.is_flagged) {
+      return Response.json(
+        { error: '账号已被限制，请联系管理员', code: 'account_banned' },
+        { status: 403 }
+      );
+    }
+
     const contentType = req.headers.get('content-type') || '';
 
     let jdText: string;
@@ -113,12 +132,6 @@ export async function POST(req: Request) {
     // ==========================================
     // 共同流程：扣次 → 创建记录 → 启动流水线
     // ==========================================
-
-    // Admin 客户端 — 绕过 RLS
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     // 检查剩余次数
     const { data: credits } = await supabase
