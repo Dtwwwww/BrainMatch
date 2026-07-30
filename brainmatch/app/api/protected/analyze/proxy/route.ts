@@ -14,16 +14,31 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     const user = await getAuthenticatedUser();
-    const { jdText, resumeText, friendName, friendPhone } = await req.json();
-
-    if (!jdText || !resumeText) {
-      return Response.json({ error: 'JD 和简历不能为空' }, { status: 400 });
-    }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+
+    // 检查用户是否被封禁
+    const { data: userConfig } = await supabase
+      .from('user_config')
+      .select('is_flagged, flag_reason')
+      .eq('user_id', user.id)
+      .single();
+
+    if (userConfig?.is_flagged) {
+      return Response.json(
+        { error: '账号已被限制，请联系管理员', code: 'account_banned' },
+        { status: 403 }
+      );
+    }
+
+    const { jdText, resumeText, friendName, friendPhone } = await req.json();
+
+    if (!jdText || !resumeText) {
+      return Response.json({ error: 'JD 和简历不能为空' }, { status: 400 });
+    }
 
     // 检查次数
     const { data: credits } = await supabase

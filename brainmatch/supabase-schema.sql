@@ -304,3 +304,21 @@ USING (from_user_id = auth.uid() OR to_user_id = auth.uid());
 CREATE POLICY "Users can read own config"
 ON public.user_config FOR SELECT
 USING (user_id = auth.uid());
+
+-- =============================================
+-- 13. 管理员操作日志表（审计追溯）
+-- =============================================
+CREATE TABLE public.admin_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  action text NOT NULL,
+  target_type text NOT NULL,
+  target_id text,
+  details jsonb DEFAULT '{}'::jsonb,
+  admin_key_hint text,
+  ip_address text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX idx_admin_logs_action ON public.admin_logs(action);
+CREATE INDEX idx_admin_logs_target ON public.admin_logs(target_type, target_id);
+CREATE INDEX idx_admin_logs_created_at ON public.admin_logs(created_at DESC);
