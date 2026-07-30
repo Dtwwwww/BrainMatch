@@ -225,7 +225,8 @@ export async function runAnalysisPipeline(
       .from('analyses')
       .update({
         updated_at: new Date().toISOString(),
-        note: `Pipeline error: ${error.message}`,
+        status: '分析失败',
+        report_json: { error: error.message },
       })
       .eq('id', analysisId);
   }

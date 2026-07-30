@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { handleAppError } from '@/lib/api/error-handler';
 import { parseResumeFile } from '@/lib/ocr/resume-parse';

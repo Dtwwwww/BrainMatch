@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import GlassCard from '@/components/ui/GlassCard';

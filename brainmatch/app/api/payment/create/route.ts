@@ -1,3 +1,4 @@
+
 import { getAuthenticatedUser, createSupabaseServerClient } from '@/lib/supabase/server';
 
 import { getPaymentProvider } from '@/lib/payment/factory';

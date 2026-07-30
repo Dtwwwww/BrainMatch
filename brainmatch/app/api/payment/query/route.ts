@@ -1,3 +1,4 @@
+
 import { getAuthenticatedUser } from '@/lib/supabase/server';
 import { getPaymentProvider } from '@/lib/payment/factory';
 import { handleAppError } from '@/lib/api/error-handler';
